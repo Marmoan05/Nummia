@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <!-- Fondo transparente -->
+    <circle cx="256" cy="256" r="185"
+        fill="none" stroke="#C9A45C" stroke-width="18"/>
+    <circle cx="256" cy="256" r="157"
+        fill="none" stroke="#16866A" stroke-width="8" opacity="0.65"/>
+
+    <!-- Símbolo ^ centrado -->
+    <path d="M226 153 L256 125 L286 153"
+        fill="none" stroke="#C9A45C" stroke-width="14"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- N -->
+    <path d="M184 337 V175 L328 337 V175"
+        fill="none" stroke="#16866A" stroke-width="38"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
