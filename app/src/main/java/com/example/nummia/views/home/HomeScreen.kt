@@ -75,8 +75,11 @@ fun HomeScreen(
     var showMovementDialog by remember { mutableStateOf(false) }
     var showBalanceDialog by remember { mutableStateOf(false) }
     var showPlannedDialog by remember { mutableStateOf(false) }
+    val now = System.currentTimeMillis()
     val monthlyIncome = state.movements.filter {
-        it.type == TransactionType.INCOME && it.timestamp.isInCurrentMonth()
+        it.type == TransactionType.INCOME &&
+            it.timestamp <= now &&
+            it.timestamp.isInCurrentMonth()
     }.sumOf { it.amountCents }
 
     ScreenColumn {

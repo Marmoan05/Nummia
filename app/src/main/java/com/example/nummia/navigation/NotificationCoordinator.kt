@@ -40,7 +40,7 @@ internal fun NotificationCoordinator(
         appState.billRemindersEnabled,
         appState.billPushNotificationsEnabled
     ) {
-        if (isInitialized && appState.billRemindersEnabled &&
+        if (isInitialized && appState.onboardingCompleted && appState.billRemindersEnabled &&
             appState.billPushNotificationsEnabled
         ) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -63,6 +63,8 @@ internal fun NotificationCoordinator(
     }
 
     LaunchedEffect(
+        isInitialized,
+        appState.onboardingCompleted,
         appState.plannedExpenses,
         appState.billRemindersEnabled,
         appState.billPushNotificationsEnabled,
@@ -72,10 +74,13 @@ internal fun NotificationCoordinator(
         appState.billReminderMinute,
         appState.overdueReminderIntervalDays
     ) {
+        if (!isInitialized) return@LaunchedEffect
+
         BillReminderScheduler.scheduleAll(
             context,
             appState.plannedExpenses,
-            appState.billRemindersEnabled && appState.billPushNotificationsEnabled,
+            appState.onboardingCompleted && appState.billRemindersEnabled &&
+                appState.billPushNotificationsEnabled,
             monthlyLeadDays = appState.monthlyReminderDaysBefore,
             weeklyLeadDays = appState.weeklyReminderDaysBefore,
             reminderHour = appState.billReminderHour,
@@ -85,7 +90,7 @@ internal fun NotificationCoordinator(
     }
 
     LaunchedEffect(isInitialized, expenseToOpenId) {
-        if (isInitialized && !startupReminderChecked) {
+        if (isInitialized && appState.onboardingCompleted && !startupReminderChecked) {
             startupReminderChecked = true
             onStartupRemindersChanged(
                 expenseToOpenId == null &&

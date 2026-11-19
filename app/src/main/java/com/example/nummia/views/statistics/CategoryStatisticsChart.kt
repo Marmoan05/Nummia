@@ -2,27 +2,16 @@ package com.example.nummia.views.statistics
 
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -34,13 +23,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.geometry.Offset
-import com.example.nummia.views.components.LocalCurrencyCode
-import com.example.nummia.views.components.expenseColor
 import com.example.nummia.views.components.formatMoney
 
 /** Serie del gráfico; los puntos nulos dejan huecos en vez de representar importes cero. */
@@ -49,47 +35,6 @@ internal data class ChartLine(
     val color: Color,
     val points: List<Long?>
 )
-
-@Composable
-internal fun ComparisonTotal(
-    label: String,
-    amount: Long,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
-    ) {
-        Column(
-            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier.padding(end = 6.dp)
-                        .height(8.dp)
-                        .width(8.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(color)
-                )
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1
-                )
-            }
-            Text(
-                formatMoney(amount, LocalCurrencyCode.current),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1
-            )
-        }
-    }
-}
 
 /** Dibuja una o varias series y comunica el índice del punto tocado al llamador. */
 @Composable
@@ -252,80 +197,15 @@ internal fun SpendingLineChart(
             if (anchorAmount != null) {
                 val anchorX = left + index * xStep
                 val anchorY = graphBottom - (anchorAmount.toDouble() / maxAmount * graphHeight).toFloat()
-                val tooltipTextSize = 12.sp.toPx()
-                val tooltipLineHeight = 17.sp.toPx()
-                val horizontalPadding = 12.dp.toPx()
-                val verticalPadding = 9.dp.toPx()
-                val swatchSize = 6.dp.toPx()
-                val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = tooltipForeground.toArgb()
-                    textSize = tooltipTextSize
-                    typeface = android.graphics.Typeface.create(
-                        android.graphics.Typeface.DEFAULT,
-                        android.graphics.Typeface.BOLD
-                    )
-                }
-                val tooltipRows = buildList {
-                    add(labels[index] to null)
-                    lines.forEach { line ->
-                        line.points.getOrNull(index)?.let { amount ->
-                            add("${line.label}: ${formatMoney(amount, currencyCode)}" to line.color)
-                        }
-                    }
-                }
-                val contentWidth = tooltipRows.maxOfOrNull { textPaint.measureText(it.first) } ?: 0f
-                val tooltipWidth = (contentWidth + horizontalPadding * 2 + swatchSize)
-                    .coerceAtMost(size.width - 16.dp.toPx())
-                val tooltipHeight = tooltipRows.size * tooltipLineHeight + verticalPadding * 2
-                val tooltipLeft = (anchorX - tooltipWidth / 2)
-                    .coerceIn(8.dp.toPx(), size.width - tooltipWidth - 8.dp.toPx())
-                val aboveTop = anchorY - tooltipHeight - 12.dp.toPx()
-                val tooltipTop = if (aboveTop >= 4.dp.toPx()) {
-                    aboveTop
-                } else {
-                    (anchorY + 12.dp.toPx()).coerceAtMost(size.height - tooltipHeight - 4.dp.toPx())
-                }
-                val canvas = drawContext.canvas.nativeCanvas
-                val backgroundPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = tooltipBackground.toArgb()
-                    style = Paint.Style.FILL
-                    setShadowLayer(5.dp.toPx(), 0f, 2.dp.toPx(), android.graphics.Color.BLACK)
-                }
-                canvas.save()
-                canvas.drawRoundRect(
-                    tooltipLeft,
-                    tooltipTop,
-                    tooltipLeft + tooltipWidth,
-                    tooltipTop + tooltipHeight,
-                    12.dp.toPx(),
-                    12.dp.toPx(),
-                    backgroundPaint
+                drawChartTooltip(
+                    anchor = Offset(anchorX, anchorY),
+                    label = labels[index],
+                    lines = lines,
+                    index = index,
+                    currencyCode = currencyCode,
+                    tooltipBackground = tooltipBackground,
+                    tooltipForeground = tooltipForeground
                 )
-                backgroundPaint.clearShadowLayer()
-                tooltipRows.forEachIndexed { rowIndex, (text, seriesColor) ->
-                    val baseline = tooltipTop + verticalPadding + (rowIndex + 1) * tooltipLineHeight -
-                        (tooltipLineHeight - tooltipTextSize) / 2
-                    textPaint.color = tooltipForeground.toArgb()
-                    if (seriesColor != null) {
-                        val swatchPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                            color = seriesColor.toArgb()
-                            style = Paint.Style.FILL
-                        }
-                        canvas.drawCircle(
-                            tooltipLeft + horizontalPadding + swatchSize / 2,
-                            baseline - tooltipTextSize / 3,
-                            swatchSize / 2,
-                            swatchPaint
-                        )
-                    }
-                    canvas.drawText(
-                        text,
-                        tooltipLeft + horizontalPadding + swatchSize,
-                        baseline,
-                        textPaint
-                    )
-                }
-                canvas.restore()
             }
         }
     }

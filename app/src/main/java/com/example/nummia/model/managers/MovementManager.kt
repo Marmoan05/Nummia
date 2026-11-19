@@ -21,7 +21,6 @@ internal class MovementManager(
     ) {
         updateState { state ->
             val movement = MoneyMovement(
-                id = System.nanoTime(),
                 title = title,
                 description = description,
                 amountCents = amountCents,
@@ -29,9 +28,10 @@ internal class MovementManager(
                 type = type,
                 timestamp = timestamp
             )
-            repository.addMovement(movement)
+            val savedMovement = movement.copy(id = repository.addMovement(movement))
             state.copy(
-                movements = (listOf(movement) + state.movements).sortedByDescending { it.timestamp }
+                movements = (listOf(savedMovement) + state.movements)
+                    .sortedByDescending { it.timestamp }
             )
         }
     }

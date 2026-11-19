@@ -1,8 +1,23 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
 }
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/build/roomSchemas")
+}
+
+val releaseSigningProperties = Properties().apply {
+    val propertiesFile = rootProject.file("keystore.properties")
+    if (propertiesFile.isFile) {
+        propertiesFile.inputStream().use { load(it) }
+    }
+}
+val appVersionName = providers.gradleProperty("appVersionName").orElse("0.9").get()
+val appVersionCode = providers.gradleProperty("appVersionCode").map(String::toInt).orElse(9).get()
 
 android {
     namespace = "com.example.nummia"
@@ -12,16 +27,35 @@ android {
         applicationId = "com.example.nummia"
         minSdk = 26
         targetSdk = 37
-        versionCode = 8
-        versionName = "0.8"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (!releaseSigningProperties.isEmpty) {
+            create("release") {
+                storeFile = rootProject.file(
+                    releaseSigningProperties.getProperty("storeFile")
+                        ?: error("Falta storeFile en keystore.properties.")
+                )
+                storePassword = releaseSigningProperties.getProperty("storePassword")
+                    ?: error("Falta storePassword en keystore.properties.")
+                keyAlias = releaseSigningProperties.getProperty("keyAlias")
+                    ?: error("Falta keyAlias en keystore.properties.")
+                keyPassword = releaseSigningProperties.getProperty("keyPassword")
+                    ?: error("Falta keyPassword en keystore.properties.")
+            }
+        }
     }
 
     buildTypes {
         release {
             optimization {
                 enable = false
+            }
+            if (!releaseSigningProperties.isEmpty) {
+                signingConfig = signingConfigs.getByName("release")
             }
         }
     }
@@ -51,11 +85,5 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-    testImplementation(libs.junit)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.junit)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

@@ -33,7 +33,11 @@ data class FinanceSettings(
     @ColumnInfo(name = "reminder_snooze_hours", defaultValue = "24")
     val reminderSnoozeHours: Int = 24,
     @ColumnInfo(name = "bill_push_notifications_enabled", defaultValue = "1")
-    val billPushNotificationsEnabled: Boolean = true
+    val billPushNotificationsEnabled: Boolean = true,
+    @ColumnInfo(name = "auto_update_checks_enabled", defaultValue = "1")
+    val autoUpdateChecksEnabled: Boolean = true,
+    @ColumnInfo(name = "onboarding_completed", defaultValue = "0")
+    val onboardingCompleted: Boolean = false
 ) {
     /** Define el identificador fijo de la única fila de ajustes de la aplicación. */
     companion object {

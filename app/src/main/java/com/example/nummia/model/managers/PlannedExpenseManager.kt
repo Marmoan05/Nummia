@@ -7,10 +7,6 @@ import com.example.nummia.model.FinanceStateUpdater
 import com.example.nummia.model.transactions.MoneyMovement
 import com.example.nummia.model.plannedexpenses.PlannedExpense
 import com.example.nummia.model.transactions.TransactionType
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 /** Gestiona facturas previstas, recurrencias, recordatorios y registro de pagos. */
 internal class PlannedExpenseManager(
@@ -35,21 +31,30 @@ internal class PlannedExpenseManager(
                 require(dueAt > 0L) { "Selecciona la fecha de vencimiento." }
                 dueAt
             } else {
-                requireValidBillingDay(frequency, billingDay)
-                nextBillingDate(frequency, billingDay, System.currentTimeMillis(), includeToday = true)
+                PlannedExpenseSchedule.requireValidBillingDay(frequency, billingDay)
+                PlannedExpenseSchedule.nextBillingDate(
+                    frequency,
+                    billingDay,
+                    System.currentTimeMillis(),
+                    includeToday = true
+                )
             }
             require(
                 repeatUntilAt == null ||
                     (frequency != BillingFrequency.NONE &&
-                        isAllowedPeriod(nextDueAt, repeatUntilAt, frequency, includeUntilPeriod))
-            ) { "La fecha de fin no permite ningún cobro con la frecuencia elegida." }
+                        PlannedExpenseSchedule.isAllowedPeriod(
+                            nextDueAt,
+                            repeatUntilAt,
+                            frequency,
+                            includeUntilPeriod
+                        ))
+            ) { "La fecha de fin no permite ningún cobro con la frecuencia elegida."             }
             val expense = PlannedExpense(
-                id = System.nanoTime(),
                 title = title,
                 description = description,
                 amountCents = amountCents,
                 dueDate = if (frequency == BillingFrequency.NONE) dueDate
-                else formatBillingDate(nextDueAt),
+                else PlannedExpenseSchedule.formatBillingDate(nextDueAt),
                 category = category,
                 frequency = frequency,
                 billingDay = billingDay,
@@ -57,8 +62,8 @@ internal class PlannedExpenseManager(
                 repeatUntilAt = repeatUntilAt,
                 includeUntilPeriod = includeUntilPeriod
             )
-            repository.addPlannedExpense(expense)
-            state.copy(plannedExpenses = listOf(expense) + state.plannedExpenses)
+            val savedExpense = expense.copy(id = repository.addPlannedExpense(expense))
+            state.copy(plannedExpenses = listOf(savedExpense) + state.plannedExpenses)
         }
     }
 
@@ -78,8 +83,11 @@ internal class PlannedExpenseManager(
                 // Editar el resto de datos no debe adelantar el vencimiento ya programado.
                 current.nextDueAt
             } else {
-                requireValidBillingDay(expense.frequency, expense.billingDay)
-                nextBillingDate(
+                PlannedExpenseSchedule.requireValidBillingDay(
+                    expense.frequency,
+                    expense.billingDay
+                )
+                PlannedExpenseSchedule.nextBillingDate(
                     expense.frequency,
                     expense.billingDay,
                     System.currentTimeMillis(),
@@ -89,7 +97,7 @@ internal class PlannedExpenseManager(
             require(
                 expense.repeatUntilAt == null ||
                     (expense.frequency != BillingFrequency.NONE &&
-                        isAllowedPeriod(
+                        PlannedExpenseSchedule.isAllowedPeriod(
                             nextDueAt,
                             expense.repeatUntilAt,
                             expense.frequency,
@@ -101,7 +109,7 @@ internal class PlannedExpenseManager(
                 description = expense.description,
                 amountCents = expense.amountCents,
                 dueDate = if (expense.frequency == BillingFrequency.NONE) expense.dueDate
-                else formatBillingDate(nextDueAt),
+                else PlannedExpenseSchedule.formatBillingDate(nextDueAt),
                 category = expense.category,
                 frequency = expense.frequency,
                 billingDay = expense.billingDay,
@@ -172,14 +180,14 @@ internal class PlannedExpenseManager(
                 null
             } else {
                 // Si la factura estaba atrasada, un pago no genera una cadena de pagos omitidos.
-                nextBillingDate(
+                PlannedExpenseSchedule.nextBillingDate(
                     current.frequency,
                     current.billingDay,
                     maxOf(now, current.nextDueAt),
                     includeToday = false
                 ).takeIf {
                     current.repeatUntilAt == null ||
-                        isAllowedPeriod(
+                        PlannedExpenseSchedule.isAllowedPeriod(
                             it,
                             current.repeatUntilAt,
                             current.frequency,
@@ -190,13 +198,12 @@ internal class PlannedExpenseManager(
             val nextExpense = nextDueAt?.let {
                 current.copy(
                     nextDueAt = it,
-                    dueDate = formatBillingDate(it),
+                    dueDate = PlannedExpenseSchedule.formatBillingDate(it),
                     remindersDisabled = false,
                     reminderSnoozedUntil = 0L
                 )
             }
             val movement = MoneyMovement(
-                id = System.nanoTime(),
                 title = current.title,
                 description = when {
                     !current.description.isNullOrBlank() && extraCents > 0 ->
@@ -210,9 +217,11 @@ internal class PlannedExpenseManager(
                 type = TransactionType.EXPENSE,
                 timestamp = now
             )
-            repository.recordPlannedExpensePayment(movement, nextExpense, current.id)
+            val savedMovement = movement.copy(
+                id = repository.recordPlannedExpensePayment(movement, nextExpense, current.id)
+            )
             state.copy(
-                movements = (listOf(movement) + state.movements)
+                movements = (listOf(savedMovement) + state.movements)
                     .sortedByDescending { it.timestamp },
                 plannedExpenses = state.plannedExpenses.mapNotNull {
                     when {
@@ -224,106 +233,4 @@ internal class PlannedExpenseManager(
             )
         }
     }
-
-    /** Valida el día según la frecuencia antes de calcular el siguiente vencimiento. */
-    private fun requireValidBillingDay(frequency: BillingFrequency, day: Int) {
-        val valid = when (frequency) {
-            BillingFrequency.NONE -> true
-            BillingFrequency.WEEKLY -> day in Calendar.SUNDAY..Calendar.SATURDAY
-            BillingFrequency.MONTHLY -> day in 1..31
-        }
-        require(valid) { "El día de facturación no es válido." }
-    }
-
-    /** Devuelve el siguiente vencimiento y permite incluir hoy al crear o editar la factura. */
-    private fun nextBillingDate(
-        frequency: BillingFrequency,
-        billingDay: Int,
-        after: Long,
-        includeToday: Boolean
-    ): Long {
-        val current = Calendar.getInstance().apply {
-            timeInMillis = after
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val afterDay = current.timeInMillis
-        when (frequency) {
-            BillingFrequency.NONE -> return 0L
-            BillingFrequency.WEEKLY -> {
-                val daysUntil = (billingDay - current.get(Calendar.DAY_OF_WEEK) + 7) % 7
-                current.add(Calendar.DAY_OF_YEAR, daysUntil)
-                if (!includeToday && daysUntil == 0) current.add(Calendar.WEEK_OF_YEAR, 1)
-            }
-            BillingFrequency.MONTHLY -> {
-                setMonthlyBillingDay(current, billingDay)
-                if (current.timeInMillis < afterDay ||
-                    (!includeToday && current.timeInMillis == afterDay)
-                ) {
-                    current.set(Calendar.DAY_OF_MONTH, 1)
-                    current.add(Calendar.MONTH, 1)
-                    setMonthlyBillingDay(current, billingDay)
-                }
-            }
-        }
-        return current.timeInMillis
-    }
-
-    /** Ajusta los días que no existen en el mes al último día disponible. */
-    private fun setMonthlyBillingDay(calendar: Calendar, billingDay: Int) {
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(
-            Calendar.DAY_OF_MONTH,
-            minOf(billingDay, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-        )
-    }
-
-    /** Compara semanas o meses completos; el indicador decide si se incluye el periodo final. */
-    private fun isAllowedPeriod(
-        dueAt: Long,
-        endAt: Long,
-        frequency: BillingFrequency,
-        includeEndPeriod: Boolean
-    ): Boolean {
-        val due = Calendar.getInstance().apply { timeInMillis = dueAt }
-        val end = Calendar.getInstance().apply { timeInMillis = endAt }
-        val samePeriod = when (frequency) {
-            BillingFrequency.NONE -> false
-            BillingFrequency.MONTHLY ->
-                due.get(Calendar.YEAR) == end.get(Calendar.YEAR) &&
-                    due.get(Calendar.MONTH) == end.get(Calendar.MONTH)
-            BillingFrequency.WEEKLY ->
-                startOfWeek(due).timeInMillis == startOfWeek(end).timeInMillis
-        }
-        val duePeriodStart = if (frequency == BillingFrequency.WEEKLY) {
-            startOfWeek(due).timeInMillis
-        } else {
-            due.set(Calendar.DAY_OF_MONTH, 1)
-            due.timeInMillis
-        }
-        val endPeriodStart = if (frequency == BillingFrequency.WEEKLY) {
-            startOfWeek(end).timeInMillis
-        } else {
-            end.set(Calendar.DAY_OF_MONTH, 1)
-            end.timeInMillis
-        }
-        return duePeriodStart < endPeriodStart || (samePeriod && includeEndPeriod)
-    }
-
-    /** Normaliza al lunes a medianoche, que es el inicio de semana usado por la app. */
-    private fun startOfWeek(calendar: Calendar): Calendar =
-        (calendar.clone() as Calendar).apply {
-            firstDayOfWeek = Calendar.MONDAY
-            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-    /** Guarda una etiqueta breve de vencimiento para facturas recurrentes. */
-    private fun formatBillingDate(timestamp: Long): String =
-        "Próximo: " + SimpleDateFormat("d MMM", Locale.forLanguageTag("es-ES")).format(Date(timestamp))
 }

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.9 - Nuevas funciones y mejoras
+
+### Nuevas funciones
+
+- **Configuración inicial:** al empezar, puedes elegir el saldo inicial, la moneda, los colores y los recordatorios. La app ya no incluye movimientos ni pagos de ejemplo.
+- **Actualizaciones:** puedes buscar nuevas versiones desde Ajustes o activar la búsqueda automática. Nummia muestra las novedades y pide confirmación antes de descargar e instalar.
+- **Historial de cambios:** consulta las novedades de esta versión y de versiones anteriores desde Ajustes.
+- **Informes de errores:** si la app se cierra inesperadamente, puedes consultar y compartir un informe al volver a abrirla.
+
+### Correcciones y mejoras
+
+- Al actualizar, se conservan los movimientos, pagos, presupuestos y preferencias guardados.
+- Si no se pueden cargar tus datos al iniciar, la app informa del problema y permite volver a intentarlo.
+- Los avisos de pagos reflejan la información guardada al abrir la app.
+- Los movimientos con fecha futura no se incluyen en el saldo ni en los resúmenes hasta que llega su fecha.
+- Se mejoró el registro de pagos con un extra por retraso y la gestión de sus recordatorios.
+
 ## 0.8 - Primera versión
 
 Primera versión de Nummia, una aplicación Android para llevar las finanzas personales desde el dispositivo.
@@ -18,7 +35,7 @@ Primera versión de Nummia, una aplicación Android para llevar las finanzas per
 - **Moneda:** selección de distintas monedas y formato acorde con sus decimales. Cambiar de moneda no convierte los importes mediante tipos de cambio.
 - **Personalización:** varias paletas visuales, incluida la vista previa en Ajustes.
 - **Persistencia local:** saldo, movimientos, facturas, presupuestos, moneda y paleta se guardan en una base de datos local. No requiere cuenta y no sincroniza datos con la nube.
-- **Inicio sin datos precargados:** la aplicación comienza con saldo cero y sin movimientos, facturas ni presupuestos; los datos que aparecen son los que añade el usuario.
+- **Datos de ejemplo:** la primera ejecución carga movimientos y facturas de muestra para enseñar las distintas pantallas y recordatorios.
 
 ### Detalles técnicos
 

@@ -6,8 +6,8 @@ import androidx.room.PrimaryKey
 /** Entidad Room que representa un pago anotado para realizarse en el futuro. */
 @Entity(tableName = "planned_expenses")
 data class PlannedExpense(
-    @PrimaryKey
-    val id: Long,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0L,
     val title: String,
     val amountCents: Long,
     val dueDate: String,

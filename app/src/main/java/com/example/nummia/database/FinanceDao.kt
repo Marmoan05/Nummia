@@ -24,9 +24,9 @@ interface FinanceDao {
     @Query("SELECT * FROM movements ORDER BY timestamp DESC")
     suspend fun getMovements(): List<MoneyMovement>
 
-    /** Inserta un movimiento y falla si ya existe su identificador. */
+    /** Inserta un movimiento y devuelve el identificador generado por Room. */
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertMovement(movement: MoneyMovement)
+    suspend fun insertMovement(movement: MoneyMovement): Long
 
     /** Actualiza los campos de un movimiento existente. */
     @Update
@@ -44,9 +44,9 @@ interface FinanceDao {
     @Query("SELECT * FROM planned_expenses ORDER BY id DESC")
     suspend fun getPlannedExpenses(): List<PlannedExpense>
 
-    /** Inserta un pago previsto y falla si ya existe su identificador. */
+    /** Inserta un pago previsto y devuelve el identificador generado por Room. */
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insertPlannedExpense(expense: PlannedExpense)
+    suspend fun insertPlannedExpense(expense: PlannedExpense): Long
 
     /** Actualiza importes de varios pagos previstos durante un cambio de moneda. */
     @Update

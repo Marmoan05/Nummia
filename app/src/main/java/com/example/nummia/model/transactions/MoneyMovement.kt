@@ -5,8 +5,8 @@ import androidx.room.PrimaryKey
 /** Entidad Room que representa un ingreso o gasto del historial. */
 @Entity(tableName = "movements")
 data class MoneyMovement(
-    @PrimaryKey
-    val id: Long,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0L,
     val title: String,
     val amountCents: Long,
     val category: String,

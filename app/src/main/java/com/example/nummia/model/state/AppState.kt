@@ -5,7 +5,7 @@ import com.example.nummia.model.plannedexpenses.PlannedExpense
 import com.example.nummia.model.settings.AppThemePalette
 import com.example.nummia.model.transactions.MoneyMovement
 
-/** Agrupa el saldo inicial, movimientos, pagos previstos y límites presupuestarios. */
+/** Agrupa las finanzas, preferencias de la app y el estado de la configuración inicial. */
 data class AppState(
     val initialBalanceCents: Long,
     val movements: List<MoneyMovement>,
@@ -21,17 +21,11 @@ data class AppState(
     val billReminderMinute: Int = 0,
     val overdueReminderIntervalDays: Int = 1,
     val reminderSnoozeHours: Int = 24,
-    val billPushNotificationsEnabled: Boolean = true
+    val billPushNotificationsEnabled: Boolean = true,
+    val autoUpdateChecksEnabled: Boolean = true,
+    val onboardingCompleted: Boolean = false
 ) {
     /** Devuelve el saldo calculado sumando ingresos y restando gastos al saldo inicial. */
     val balanceCents: Long
         get() = BalanceCalculator.calculate(this)
 }
-
-internal fun createEmptyFinanceState() = AppState(
-    initialBalanceCents = 0,
-    movements = emptyList(),
-    plannedExpenses = emptyList(),
-    weeklyBudgetCents = 0,
-    monthlyBudgetCents = 0
-)

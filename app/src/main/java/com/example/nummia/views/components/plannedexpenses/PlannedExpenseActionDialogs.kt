@@ -90,9 +90,13 @@ internal fun PlannedExpensePaymentDialog(
     val currencyCode = LocalCurrencyCode.current
     var extra by remember(expense.id) { mutableStateOf("0") }
     val extraCents = parseCents(extra, currencyCode)
-    val canAddExtra = extraCents != null && extraCents >= 0 &&
-        extraCents <= Long.MAX_VALUE - expense.amountCents
-    val total = if (canAddExtra) expense.amountCents + (extraCents ?: 0L) else expense.amountCents
+    val totalCents = extraCents?.takeIf { it >= 0 }?.let {
+        try {
+            Math.addExact(expense.amountCents, it)
+        } catch (_: ArithmeticException) {
+            null
+        }
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Marcar como pagada") },
@@ -106,12 +110,15 @@ internal fun PlannedExpensePaymentDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
                 )
-                Text("Se añadirá un gasto de ${formatMoney(total, currencyCode)}.")
+                Text(
+                    totalCents?.let { "Se añadirá un gasto de ${formatMoney(it, currencyCode)}." }
+                        ?: "El importe total supera el máximo permitido."
+                )
             }
         },
         confirmButton = {
             TextButton(
-                enabled = canAddExtra,
+                enabled = totalCents != null,
                 onClick = { extraCents?.let(onConfirm) }
             ) { Text("Confirmar pago") }
         },

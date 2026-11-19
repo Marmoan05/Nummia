@@ -2,19 +2,20 @@
 
 ## Para qué sirve
 
-Nummia permite llevar un control personal de ingresos, gastos, saldo, pagos pendientes y límites de gasto. Los datos se guardan en el dispositivo mediante Room y permanecen después de cerrar la aplicación.
+Nummia permite llevar un control personal de ingresos, gastos, saldo, pagos pendientes y límites de gasto. Los datos se guardan en el dispositivo y permanecen después de cerrar la aplicación.
 
 ## Inicio
 
 La pantalla **Inicio** muestra el saldo actual, el saldo inicial, los ingresos y gastos del mes, el progreso de los presupuestos que tengan un límite, los próximos pagos y los movimientos recientes. Los periodos sin límite no aparecen en este resumen.
 
+- La primera vez aparece la configuración de bienvenida. Elige el saldo inicial, la moneda, la paleta y si quieres activar los recordatorios dentro de la app y las notificaciones del móvil. La app guarda estas opciones y después abre Inicio; podrás cambiarlas en Ajustes.
 - Pulsa **Editar** junto al saldo inicial para establecer el dinero que tenías al empezar.
 - Pulsa **Añadir movimiento** para registrar un ingreso o un gasto. Indica una descripción, el importe y una categoría.
 - Pulsa **Añadir** en Próximos pagos para anotar una factura única o recurrente, con su importe, categoría y fecha o día de facturación. Las recurrentes pueden ser semanales o mensuales; opcionalmente, puedes limitar la repetición a una semana o mes final e indicar si se incluye ese último periodo.
 
 El saldo actual se calcula con el saldo inicial más los ingresos, menos los gastos registrados. Los pagos previstos no se restan del saldo hasta que registres el pago como gasto.
 
-Las facturas vencidas aparecen marcadas como **RETRASADA**. Los recordatorios elegibles se agrupan en un único aviso encima de la lista de facturas en Inicio y Presupuesto; al iniciar la app también aparece una ventana con las facturas próximas o vencidas. Las facturas para las que se eligió **No recordar** no aparecen en esos avisos. En **Ajustes** puedes activar o desactivar todos los recordatorios, o desmarcar **Notificaciones del móvil** para desactivar solo las notificaciones del sistema y conservar los avisos dentro de la app. También puedes configurar los días de antelación para facturas mensuales y semanales, la hora, cada cuánto se repiten los avisos y cuánto dura **Más tarde**. Los valores iniciales son 7 días antes para las mensuales, 2 para las semanales, las 9:00, repetición diaria y posposición de 24 horas. Los avisos continúan hasta marcar la factura como pagada. En cada notificación o aviso de la app puedes abrir los detalles, posponerla o dejar de recibir recordatorios para esa factura. En Android 13 o posterior, la app solicita el permiso de notificaciones al abrirse. Si las notificaciones están bloqueadas en Android, los avisos dentro de la app siguen disponibles.
+Las facturas vencidas aparecen marcadas como **RETRASADA**. Los recordatorios elegibles se agrupan en un único aviso encima de la lista de facturas en Inicio y Presupuesto; al iniciar la app también aparece una ventana con las facturas próximas o vencidas. Las facturas para las que se eligió **No recordar** no aparecen en esos avisos. En **Ajustes** puedes activar o desactivar todos los recordatorios, o desmarcar **Notificaciones del móvil** para desactivar solo las notificaciones del sistema y conservar los avisos dentro de la app. También puedes configurar los días de antelación para facturas mensuales y semanales, la hora, cada cuánto se repiten los avisos y cuánto dura **Más tarde**. Los valores iniciales son 7 días antes para las mensuales, 2 para las semanales, las 9:00, repetición diaria y posposición de 24 horas. Los avisos continúan hasta marcar la factura como pagada. En cada notificación o aviso de la app puedes abrir los detalles, posponerla o dejar de recibir recordatorios para esa factura. En Android 13 o posterior, la app solicita el permiso de notificaciones al activar la opción durante la configuración inicial o en Ajustes. Si las notificaciones están bloqueadas en Android, los avisos dentro de la app siguen disponibles.
 
 ## Movimientos
 
@@ -55,9 +56,12 @@ Además, en **Paleta** puedes elegir entre varias combinaciones visuales para pe
 
 La paleta elegida se guarda localmente y se mantiene al volver a abrir la aplicación.
 
+En Ajustes > Actualizaciones puedes activar o desactivar la detección automática. Cuando está activa, la app busca al iniciarse, como máximo una vez cada 24 horas, si hay una versión más reciente en las Releases públicas de GitHub. Si encuentra una, primero pregunta si quieres descargarla; una vez verificada, vuelve a preguntar antes de abrir el instalador de Android. También puedes buscar versiones manualmente aunque desactives la detección automática. Android puede pedir permiso para instalar aplicaciones desde Nummia y siempre solicita confirmar la instalación. La actualización debe estar firmada con el mismo certificado y conservar el mismo identificador de aplicación; de lo contrario Android la rechazará.
+
 ## Datos y limitaciones
 
-- Al utilizar la app por primera vez, el saldo es cero y no hay movimientos, pagos ni presupuestos precargados. Añade tus propios datos desde Inicio o Presupuesto.
+- En una instalación nueva, la app empieza sin movimientos ni pagos de ejemplo para que el saldo inicial configurado no se mezcle con datos ficticios. Las instalaciones actualizadas conservan sus datos.
+- Si la app se cierra inesperadamente, al volver a abrirla ofrece copiar o compartir un informe con otra aplicación. El informe queda guardado solo en el dispositivo y no se envía hasta que elijas compartirlo.
 - Los datos se almacenan localmente en este dispositivo; la app no los sincroniza con una cuenta o servicio en la nube.
 - Los movimientos se pueden editar o eliminar desde su detalle. Las facturas pendientes se pueden añadir y marcar como pagadas; no se descuentan automáticamente y pueden generar avisos y recordatorios.
 - Los errores al guardar se muestran en un mensaje en pantalla.

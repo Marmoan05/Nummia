@@ -15,6 +15,7 @@ fun SettingsScreen(
     selectedTheme: AppThemePalette,
     billRemindersEnabled: Boolean,
     billPushNotificationsEnabled: Boolean,
+    autoUpdateChecksEnabled: Boolean,
     monthlyReminderDaysBefore: Int,
     weeklyReminderDaysBefore: Int,
     billReminderHour: Int,
@@ -25,7 +26,9 @@ fun SettingsScreen(
     onChangeTheme: (String) -> Unit,
     onChangeBillReminders: (Boolean) -> Unit,
     onChangeBillPushNotifications: (Boolean) -> Unit,
+    onChangeAutoUpdateChecks: (Boolean) -> Unit,
     onChangeReminderPreferences: (Int, Int, Int, Int, Int, Int) -> Unit,
+    onOpenReleaseNotes: () -> Unit,
     onBack: () -> Unit
 ) {
     ScreenColumn {
@@ -58,6 +61,12 @@ fun SettingsScreen(
             onChangeBillReminders = onChangeBillReminders,
             onChangeBillPushNotifications = onChangeBillPushNotifications,
             onChangeReminderPreferences = onChangeReminderPreferences
+        )
+
+        SettingsUpdates(
+            autoUpdateChecksEnabled = autoUpdateChecksEnabled,
+            onChangeAutoUpdateChecks = onChangeAutoUpdateChecks,
+            onOpenReleaseNotes = onOpenReleaseNotes
         )
     }
 }

@@ -1,6 +1,9 @@
 package com.example.nummia.model.managers
 
 import com.example.nummia.database.FinanceRepository
+import com.example.nummia.model.settings.AppThemePalette
+import com.example.nummia.model.settings.normalizeAmountForCurrency
+import com.example.nummia.model.settings.supportedCurrencies
 import com.example.nummia.model.state.AppState
 import com.example.nummia.model.FinanceStateUpdater
 
@@ -76,6 +79,15 @@ internal class SettingsManager(
         }
     }
 
+    /** Activa o desactiva la detección automática de actualizaciones. */
+    fun changeAutoUpdateChecks(enabled: Boolean) {
+        updateState { state ->
+            val updated = state.copy(autoUpdateChecksEnabled = enabled)
+            repository.saveSettings(updated)
+            updated
+        }
+    }
+
     /** Cambia moneda conservando los valores numéricos y redondeando a su precisión. */
     fun changeCurrency(currencyCode: String) {
         updateState { state -> repository.changeCurrency(state, currencyCode) }
@@ -85,6 +97,48 @@ internal class SettingsManager(
     fun changeThemePalette(themePalette: String) {
         updateState { state ->
             val updated = state.copy(themePalette = themePalette)
+            repository.saveSettings(updated)
+            updated
+        }
+    }
+
+    /** Persiste en una sola operación los datos elegidos en la primera configuración. */
+    fun completeFirstRunSetup(
+        initialBalanceCents: Long,
+        currencyCode: String,
+        themePalette: String,
+        billRemindersEnabled: Boolean,
+        billPushNotificationsEnabled: Boolean,
+        monthlyDaysBefore: Int,
+        weeklyDaysBefore: Int,
+        hour: Int,
+        minute: Int,
+        repeatIntervalDays: Int,
+        snoozeHours: Int
+    ) {
+        require(initialBalanceCents >= 0L)
+        require(supportedCurrencies.any { it.first == currencyCode })
+        require(AppThemePalette.entries.any { it.id == themePalette })
+        require(monthlyDaysBefore in 1..30)
+        require(weeklyDaysBefore in 1..7)
+        require(hour in 0..23 && minute in 0..59)
+        require(repeatIntervalDays in 1..7)
+        require(snoozeHours in 1..168)
+        updateState { state ->
+            val updated = state.copy(
+                initialBalanceCents = normalizeAmountForCurrency(initialBalanceCents, currencyCode),
+                currencyCode = currencyCode,
+                themePalette = themePalette,
+                billRemindersEnabled = billRemindersEnabled,
+                billPushNotificationsEnabled = billPushNotificationsEnabled,
+                monthlyReminderDaysBefore = monthlyDaysBefore,
+                weeklyReminderDaysBefore = weeklyDaysBefore,
+                billReminderHour = hour,
+                billReminderMinute = minute,
+                overdueReminderIntervalDays = repeatIntervalDays,
+                reminderSnoozeHours = snoozeHours,
+                onboardingCompleted = true
+            )
             repository.saveSettings(updated)
             updated
         }
